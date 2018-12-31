@@ -5,9 +5,9 @@ import java.awt.*;
 public class Player {
 
 
-        // tworzymy przyciski
+        // tworzę przyciski
         JButton p = new JButton("Start");
-        JButton q = new JButton("Stop");
+        JButton q = new JButton("Pause");
         JButton r = new JButton("Resume");
         JButton t = new JButton("Choose song");
         Player(){
@@ -17,7 +17,7 @@ public class Player {
 
     public void prepareGUI(){
 
-        // tworzę okienko programu
+        // tworzę ogólne okienko programu
         JFrame frame = new JFrame();
         //tytuł
         frame.setTitle("MP3 PLAYER");
