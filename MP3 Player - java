@@ -1,23 +1,45 @@
-import javax.swing.*;
-import java.awt.*;
+    import javazoom.jl.decoder.JavaLayerException;
+    import javazoom.jl.player.Player;
+    import javax.swing.*;
+    import javax.swing.filechooser.FileNameExtensionFilter;
+    import java.awt.*;
+    import java.awt.event.ActionEvent;
+    import java.awt.event.ActionListener;
+    import java.io.*;
 
 
-public class Player {
+    public class MP3player implements ActionListener{
 
+    //tworzę pole wyświetlania tytułu utworu
+    JLabel song = new JLabel();
 
-        // tworzę przyciski
-        JButton p = new JButton("Start");
-        JButton q = new JButton("Pause");
-        JButton r = new JButton("Resume");
-        JButton t = new JButton("Choose song");
-        Player(){
+    //tworzę przyciski
+    JButton s = new JButton("Start");
+    JButton p = new JButton("Pause");
+    JButton r = new JButton("Resume");
+    JButton c = new JButton("Choose song");
+        JFileChooser fileChooser;
+        FileInputStream fileInputStream;
+        BufferedInputStream bufferedInputStream;
+        File myFile=null;
+        String filename;
+        String filePath;
+        long totalLength;
+        long pause;
+        Player player;
+        Thread playThread;
+        Thread resumeThread;
+        MP3player(){
             prepareGUI();
+            addActionEvents();
+            playThread=new Thread(runnablePlay);
+            resumeThread=new Thread(runnableResume);
 
         }
 
     public void prepareGUI(){
 
-        // tworzę ogólne okienko programu
+        //tworzę ogólne okienko programu
         JFrame frame = new JFrame();
         //tytuł
         frame.setTitle("MP3 PLAYER");
@@ -25,33 +47,128 @@ public class Player {
         //kolor tła
         frame.getContentPane().setBackground(Color.blue);
         //rozmiar okna
-        frame.setSize(520,300);
+        frame.setSize(520,400);
         //centrowanie okna programu
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //ustalanie rozmiarów i umiejscowienie przycisków wzgłedem okienka programu
-        p.setLayout(null);
-        p.setBounds(40,150,100,60);
-        frame.add(p);
+        s.setLayout(null);
+        s.setBounds(40,150,100,60);
+        frame.add(s);
 
-        q.setLayout(null);
-        q.setBounds(200,150,100,60);
-        frame.add(q);
+        p.setLayout(null);
+        p.setBounds(200,150,100,60);
+        frame.add(p);
 
         r.setLayout(null);
         r.setBounds(360,150,100,60);
         frame.add(r);
 
-        t.setLayout(null);
-        t.setBounds(190,50,120,60);
-        frame.add(t);
+        c.setLayout(null);
+        c.setBounds(190,50,120,60);
+        frame.add(c);
+
+        song.setLayout(null);
+        song.setBounds(65,250,390,60);
+        song.setFont(new Font("Arial", Font.PLAIN, 30));
+        frame.add(song);
 
 
     }
 
+        public void addActionEvents(){
+           
+            c.addActionListener(this);
+            s.addActionListener(this);
+            p.addActionListener(this);
+            r.addActionListener(this);
+
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(e.getSource()==c){
+                
+                fileChooser = new JFileChooser();
+                fileChooser.setCurrentDirectory(new File("C:\\Users\\Hedi\\Desktop\\songs mp3 player"));
+                fileChooser.setDialogTitle("Choose song");
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setFileFilter(new FileNameExtensionFilter("Mp3 files","mp3"));
+                if(fileChooser.showOpenDialog(c)==JFileChooser.APPROVE_OPTION){
+                    myFile=fileChooser.getSelectedFile();
+                    filename=fileChooser.getSelectedFile().getName();
+                    filePath=fileChooser.getSelectedFile().getPath();
+                }
+            }
+            if(e.getSource()==s){
+                // kod pokazujący tytuł utworu
+                playThread.start();
+                song.setText("You listening: "+filename);
+            }
+            if(e.getSource()==p){
+                //fragment kodu dotyczący przycisku pause
+                if(player!=null){
+                    try {
+                        pause=fileInputStream.available();
+                        player.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }
+
+            if(e.getSource()==r){
+                //kod dotyczący przycisku resume
+                resumeThread.start();
+            }
+
+        }
+
+        Runnable runnablePlay=new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    //kod dotyczący przycisku start / używany jest streaming pliku
+                    fileInputStream=new FileInputStream(myFile);
+                    bufferedInputStream=new BufferedInputStream(fileInputStream);
+                    player=new Player(bufferedInputStream);
+                    totalLength=fileInputStream.available();
+                    player.play();
+                    //poniższe linki dotyczą wyjątków
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (JavaLayerException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        Runnable runnableResume=new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    //kod dotyczący przycisku resume
+                    fileInputStream=new FileInputStream(myFile);
+                    bufferedInputStream=new BufferedInputStream(fileInputStream);
+                    player=new Player(bufferedInputStream);
+                    fileInputStream.skip(totalLength-pause);
+                    player.play();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (JavaLayerException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+
     public static void main(String...args){
-        new Player();
+        new MP3player();
     }
 }
